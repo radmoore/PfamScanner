@@ -14,6 +14,7 @@ public class Hmmer {
 	private static String PFAMBNAME = "Pfam-B.hmm";
 	private static String HMMEREXEC = "hmmscan" ;
 	private File inputFile, outputFile, workingDir;
+	private static String testFile;
 	
 	
 	public Hmmer(String inputFilePath, String outputFilePath, String workingDirPath) {
