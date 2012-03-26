@@ -1,6 +1,5 @@
 package hmmerRunner;
 
-import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.MissingArgumentException;
@@ -10,6 +9,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+
+import parser.HmmerParser;
 
 public class HmmerRunner {
 	
@@ -45,11 +46,13 @@ public class HmmerRunner {
 			opt.addOption(inputFile);
 			opt.addOption(outputFile);
 			opt.addOption(workingDir);
-			opt.addOption("m", "merge", false, "Merge split hits");
-			opt.addOption("E", "Evalue", true, "Evalue threshold [Default: model defined]");
-			opt.addOption("r", "remove-overlaps", false, "Resolve overlaps");
-			opt.addOption("c", "collapse", false, "Collapse domains of type repeat");
+			opt.addOption("M", "merge", false, "Merge split hits");
+			opt.addOption("e", "Evalue", true, "Evalue threshold [Default: model defined]");
+			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads");
+			opt.addOption("R", "remove-overlaps", false, "Resolve overlaps");
+			opt.addOption("C", "collapse", false, "Collapse domains of type repeat");
             opt.addOption("h", "help", false, "Print this help message");
+            //opt.addOption("p", "--parse-only", true, "Only parse output");
             
             PosixParser parser = new PosixParser();
             CommandLine cl = parser.parse(opt, args, false);
@@ -60,33 +63,60 @@ public class HmmerRunner {
                 System.exit(0);
             }
             else {
-            	Hmmer hmmer = new Hmmer(
-            			cl.getOptionValue("in"), 
-            			cl.getOptionValue("out"), 
-            			cl.getOptionValue("dir"));
-            	if ( hmmer.checkParams() )
-            		//TODO: set other params on hmmer instance
+            	
+            	Float evalue = null;
+            	// Check evalue format, if specified
+            	if (cl.hasOption("e")) {
+            		try {
+            			evalue = Float.valueOf(cl.getOptionValue("e"));
+            		}
+            		catch (NumberFormatException nfe) {
+            			System.err.println("ERROR: Specified evalue not a valid number. Exiting.");
+            			System.exit(-1);
+            		}
+            	}
+            	Hmmer hmmer = new Hmmer(cl.getOptionValue("in"), cl.getOptionValue("out"), cl.getOptionValue("dir"));
+            	// set CPUs, if provided
+            	if ( cl.hasOption("c") )
+            		hmmer.setCPUs(cl.getOptionValue("c"));
+            	
+            	if ( hmmer.checkParams() ) {
             		hmmer.execute();
+            		String domtblout = hmmer.getTempOutput();
+            		HmmerParser hmmoutParser = new HmmerParser(domtblout, cl.getOptionValue("out"));
+            	
+            		// consider parsing options
+            		if (cl.hasOption("M"))
+            			hmmoutParser.setMergeMode();
+            		if (cl.hasOption("C"))
+            			hmmoutParser.setCollapseMode();            		
+            		if (cl.hasOption("R"))
+            			hmmoutParser.setResolveOverlapsMode();
+            		if (cl.hasOption("e"))
+            			hmmoutParser.setEvalueThreshold(evalue);
+            		
+            		
+            		hmmoutParser.writeXdom();
+            		hmmoutParser.destoryTempFile();
+            	}
             	else {
             		System.exit(-1);
             	}
-            }
-            
+        	}
         }
 		catch (MissingOptionException e) {
-            f.printHelp("HmmerRunner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
-            		"Run HMMSCAN against Pfam defined domains\n", opt, "");
-            System.exit(0);
+			f.printHelp("HmmerRunner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
+        		"Run HMMSCAN against Pfam defined domains\n", opt, "");
+			System.exit(0);
 		}
 		catch (MissingArgumentException e) {
 			System.err.println(e.getMessage());
-            f.printHelp("HmmerRunner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
-            		"Run HMMSCAN against Pfam defined domains\n", opt, "");
+			f.printHelp("HmmerRunner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
+        		"Run HMMSCAN against Pfam defined domains\n", opt, "");
 		}
-        catch (ParseException e) {
-            e.printStackTrace();
-        }
+		catch (ParseException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }
-

@@ -3,20 +3,21 @@ package hmmerRunner;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Hmmer {
+import javax.swing.SwingWorker;
+
+import utils.StreamGobbler;
+
+public class Hmmer extends SwingWorker<Integer, Void> {
 	
-	// This is a small test
 	private static String PFAMANAME = "Pfam-A.hmm";
-	private static String PFAMBNAME = "Pfam-B.hmm";
+	//private static String PFAMBNAME = "Pfam-B.hmm";
 	private static String HMMEREXEC = "hmmscan" ;
-	private File inputFile, outputFile, workingDir;
-	private static String testFile;
+	private String CPUs = null;
+	private File inputFile, outputFile, workingDir, tmpHmmerOut;
 	
 	
 	public Hmmer(String inputFilePath, String outputFilePath, String workingDirPath) {
@@ -28,7 +29,16 @@ public class Hmmer {
 		catch(Exception e) {
 			System.err.println("ERROR: could not create files. Exiting.");
 			e.printStackTrace();
+			System.exit(-1);
 		}
+	}
+	
+	public String getTempOutput() {
+		return this.tmpHmmerOut.getAbsolutePath();
+	}
+	
+	public void setCPUs(String CPUs) {
+		this.CPUs = CPUs;
 	}
 	
 	public boolean checkParams() {
@@ -53,44 +63,69 @@ public class Hmmer {
 		if (! workingDir.isDirectory() ) {
 			System.err.println("ERROR: "+workingDir.getName()+" is not a directory. Exiting.");
 			return false;
-		}	
+		}
+		
+		if (this.CPUs != null) {
+			try {
+				Integer.getInteger(CPUs);
+			}
+			catch (NumberFormatException nfe) {
+				System.err.println("ERROR: invalid number of CPUs: "+ CPUs +". Exiting.");
+				return false;
+			}
+		}
+		
+		// all is well, create tmpfile
+		try {
+			tmpHmmerOut = File.createTempFile("hmmer", ".domtblout", workingDir);
+		}
+		catch (IOException ioe){
+			System.err.println("ERROR: could not create temporary file. Exiting.");
+			System.exit(-1);
+		}
 		return true;
 	}
 	
 	
-	public void execute() {
+	protected Integer doInBackground() throws Exception {
+
+		int exitValue = -1;
 		List<String> command = prepareArgs();
+		System.out.println("This is the command list: "+command);
 		try {
       		ProcessBuilder pb = new ProcessBuilder(command);
+      		pb.redirectErrorStream(true);
       		Process process = pb.start();
-      		InputStream stdout = process.getInputStream();
-      		InputStream stderr = process.getErrorStream();
+      		// remove the streams quickly in sepearte threads to avoid
+      		// loosing the process
+      		StreamGobbler stg = new StreamGobbler(process.getInputStream(), false);
+      		stg.start();
       		
-      		BufferedReader stdoutReader = new BufferedReader (new InputStreamReader(stdout));
-      		BufferedReader stderrReader = new BufferedReader (new InputStreamReader(stderr));
-      		String line;
-      		
-      		while ( (line = stderrReader.readLine ()) != null ) {
-				System.out.println ("STDERR: " + line);
-			}
-      		
+      		exitValue = process.waitFor();
 		}
+  		catch (InterruptedException ire) {
+  			ire.printStackTrace();
+  		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+		return exitValue;
 	}
 	
 	private List<String> prepareArgs() {
 		List<String> command = new ArrayList<String>();
    		command.add(HMMEREXEC);
    		command.add("--domtblout");
-   		command.add(outputFile.getAbsolutePath());
+   		command.add(tmpHmmerOut.getAbsolutePath());
    		command.add("--cut_ga");
+   		command.add("--cpu");
+   		command.add("2");
    		command.add(workingDir.getAbsolutePath()+"/"+PFAMANAME);
    		command.add(inputFile.getAbsolutePath());
 		return command;
 	}
+
+
 	
 
 }

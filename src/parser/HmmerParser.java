@@ -11,24 +11,43 @@ import java.util.regex.Pattern;
 
 public class HmmerParser {
 	
-	private File hmmerOutput, outfile; 
+	private File domtblout, outfile;
+	private Boolean merge = false, resolveOverlaps = false, collapse = false;
+	private Float evalue;
 	
-	/**
-	 * default should be hmmer2 output for the time
-	 * being
-	 * @param hmmer2Output
-	 */
-	public HmmerParser(File hmmerOutput, File outfile) {
-		this.hmmerOutput = hmmerOutput;
-		this.outfile = outfile;
-	}	
-	
-	public File getHmmerOutput(){
-		return this.hmmerOutput;
+	public HmmerParser(String domtbloutPath, String outfilePath) {
+		try {
+			domtblout = new File(domtbloutPath);
+			outfile = new File(outfilePath);
+		}
+		catch (Exception e) {
+			// do something
+		}
 	}
 	
-	public void destoryFile () {
-		this.hmmerOutput.delete();
+	public void setMergeMode() {
+		this.merge = true;
+	}
+	
+	public void setCollapseMode() {
+		this.collapse = true;
+	}
+	
+	public void setResolveOverlapsMode() {
+		this.resolveOverlaps = true;
+	}
+	
+	// handle wrong format _before_ running hmmer
+	public void setEvalueThreshold(Float evalue) {
+		this.evalue = evalue;
+	}
+	
+	public File getHmmerOutput(){
+		return this.domtblout;
+	}
+	
+	public void destoryTempFile () {
+		this.domtblout.delete();
 	}
 	
 	public void writeXdom() {
@@ -40,7 +59,7 @@ public class HmmerParser {
 			FileWriter fw = new FileWriter(outfile);
 					
 			String line;
-			FileInputStream fis = new FileInputStream(this.hmmerOutput);
+			FileInputStream fis = new FileInputStream(this.domtblout);
 			DataInputStream dis = new DataInputStream(fis);
 			BufferedReader br = new BufferedReader(new InputStreamReader(dis));
 			String currentId = null;
