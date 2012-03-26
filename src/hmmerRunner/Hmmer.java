@@ -10,6 +10,7 @@ import java.util.List;
 
 public class Hmmer {
 	
+	// This is a small test
 	private static String PFAMANAME = "Pfam-A.hmm";
 	private static String PFAMBNAME = "Pfam-B.hmm";
 	private static String HMMEREXEC = "hmmscan" ;
