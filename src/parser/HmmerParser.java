@@ -16,6 +16,7 @@ public class HmmerParser {
 	private Float evalue;
 	
 	public HmmerParser(String domtbloutPath, String outfilePath) {
+		System.out.println("Starting to parse...");
 		try {
 			domtblout = new File(domtbloutPath);
 			outfile = new File(outfilePath);
@@ -68,6 +69,7 @@ public class HmmerParser {
 			
 			while((line = br.readLine())!= null) {
 				
+				System.out.println("Creating the xdom file!");
 				if (comment.matcher(line).matches())
 					continue;
 				

@@ -81,23 +81,27 @@ public class HmmerRunner {
             		hmmer.setCPUs(cl.getOptionValue("c"));
             	
             	if ( hmmer.checkParams() ) {
-            		hmmer.execute();
-            		String domtblout = hmmer.getTempOutput();
-            		HmmerParser hmmoutParser = new HmmerParser(domtblout, cl.getOptionValue("out"));
-            	
-            		// consider parsing options
-            		if (cl.hasOption("M"))
-            			hmmoutParser.setMergeMode();
-            		if (cl.hasOption("C"))
-            			hmmoutParser.setCollapseMode();            		
-            		if (cl.hasOption("R"))
-            			hmmoutParser.setResolveOverlapsMode();
-            		if (cl.hasOption("e"))
-            			hmmoutParser.setEvalueThreshold(evalue);
             		
-            		
-            		hmmoutParser.writeXdom();
-            		hmmoutParser.destoryTempFile();
+            		int retValue = hmmer.doInBackground();
+            		if (retValue == 0) {
+	            		String domtblout = hmmer.getTempOutput();
+	            		System.out.println("This is the hmmoutput: "+domtblout);
+	            		HmmerParser hmmoutParser = new HmmerParser(domtblout, cl.getOptionValue("out"));
+	            	
+	            		// consider parsing options
+	            		if (cl.hasOption("M"))
+	            			hmmoutParser.setMergeMode();
+	            		if (cl.hasOption("C"))
+	            			hmmoutParser.setCollapseMode();            		
+	            		if (cl.hasOption("R"))
+	            			hmmoutParser.setResolveOverlapsMode();
+	            		if (cl.hasOption("e"))
+	            			hmmoutParser.setEvalueThreshold(evalue);
+	            		
+	            		
+	            		hmmoutParser.writeXdom();
+	            		hmmoutParser.destoryTempFile();
+            		}
             	}
             	else {
             		System.exit(-1);

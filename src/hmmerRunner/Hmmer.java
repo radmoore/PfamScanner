@@ -87,11 +87,10 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	}
 	
 	
-	protected Integer doInBackground() throws Exception {
+	protected Integer doInBackground() {
 
 		int exitValue = -1;
 		List<String> command = prepareArgs();
-		System.out.println("This is the command list: "+command);
 		try {
       		ProcessBuilder pb = new ProcessBuilder(command);
       		pb.redirectErrorStream(true);
@@ -102,6 +101,7 @@ public class Hmmer extends SwingWorker<Integer, Void> {
       		stg.start();
       		
       		exitValue = process.waitFor();
+
 		}
   		catch (InterruptedException ire) {
   			ire.printStackTrace();
