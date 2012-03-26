@@ -64,11 +64,11 @@ public class HmmerRunner {
             }
             else {
             	
-            	Float evalue = null;
+            	Double evalue = null;
             	// Check evalue format, if specified
             	if (cl.hasOption("e")) {
             		try {
-            			evalue = Float.valueOf(cl.getOptionValue("e"));
+            			evalue = Double.valueOf(cl.getOptionValue("e"));
             		}
             		catch (NumberFormatException nfe) {
             			System.err.println("ERROR: Specified evalue not a valid number. Exiting.");
@@ -83,9 +83,9 @@ public class HmmerRunner {
             	if ( hmmer.checkParams() ) {
             		
             		int retValue = hmmer.doInBackground();
+            		
             		if (retValue == 0) {
 	            		String domtblout = hmmer.getTempOutput();
-	            		System.out.println("This is the hmmoutput: "+domtblout);
 	            		HmmerParser hmmoutParser = new HmmerParser(domtblout, cl.getOptionValue("out"));
 	            	
 	            		// consider parsing options
@@ -98,9 +98,8 @@ public class HmmerRunner {
 	            		if (cl.hasOption("e"))
 	            			hmmoutParser.setEvalueThreshold(evalue);
 	            		
-	            		
 	            		hmmoutParser.writeXdom();
-	            		hmmoutParser.destoryTempFile();
+	            		//hmmoutParser.destoryTempFile();
             		}
             	}
             	else {

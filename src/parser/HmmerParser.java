@@ -13,10 +13,9 @@ public class HmmerParser {
 	
 	private File domtblout, outfile;
 	private Boolean merge = false, resolveOverlaps = false, collapse = false;
-	private Float evalue;
+	private Double evalue = null;
 	
 	public HmmerParser(String domtbloutPath, String outfilePath) {
-		System.out.println("Starting to parse...");
 		try {
 			domtblout = new File(domtbloutPath);
 			outfile = new File(outfilePath);
@@ -39,7 +38,7 @@ public class HmmerParser {
 	}
 	
 	// handle wrong format _before_ running hmmer
-	public void setEvalueThreshold(Float evalue) {
+	public void setEvalueThreshold(Double evalue) {
 		this.evalue = evalue;
 	}
 	
@@ -69,7 +68,6 @@ public class HmmerParser {
 			
 			while((line = br.readLine())!= null) {
 				
-				System.out.println("Creating the xdom file!");
 				if (comment.matcher(line).matches())
 					continue;
 				
@@ -99,7 +97,11 @@ public class HmmerParser {
 					currentId = fields[3];
 					xdom.setLength(0);
 					xdom.append(">"+currentId+"\t"+fields[5]);
-				} 
+				}
+				if (evalue != null)
+					if (Double.parseDouble(fields[12]) > evalue)
+						continue;
+				
 				currentDoms.put(Integer.parseInt(fields[17]), 
 						fields[17]+"\t"+fields[18]+"\t"+fields[0]+"\t"+fields[12]);
 			}
