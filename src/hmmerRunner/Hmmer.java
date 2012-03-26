@@ -2,6 +2,7 @@ package hmmerRunner;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -35,10 +36,20 @@ public class Hmmer {
 			System.err.println("ERROR: could not read from "+inputFile.getName()+" or not a file. Exiting.");
 			return false;
 		}
-		if ( ( !outputFile.isFile() ) || ( !outputFile.canWrite() ) ) {
-			System.err.println("ERROR: could not write to "+outputFile.getName()+" or not a file. Exiting.");
-			return false;
+		if ( (!outputFile.isFile()) ) { 
+			try {
+				// create if non-existent
+				if (!outputFile.createNewFile()) {		
+					System.err.println("ERROR: could not create "+outputFile.getAbsoluteFile()+". Exiting.");
+					return false;
+				}
+			} 
+			catch (IOException ioe) {
+				System.err.println("ERROR: there was a problem creating "+outputFile);
+				System.exit(-1);
+			}
 		}
+		
 		if (! workingDir.isDirectory() ) {
 			System.err.println("ERROR: "+workingDir.getName()+" is not a directory. Exiting.");
 			return false;

@@ -67,6 +67,9 @@ public class HmmerRunner {
             	if ( hmmer.checkParams() )
             		//TODO: set other params on hmmer instance
             		hmmer.execute();
+            	else {
+            		System.exit(-1);
+            	}
             }
             
         }
