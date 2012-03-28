@@ -5,6 +5,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+/**
+ * Class StreamGobbler
+ * Handles the input stream coming from hmmscan in seperate threads.
+ * 
+ * 
+ * @author Andrew D. Moore <radmoore@uni-muenster.de>
+ *
+ */
 public class StreamGobbler extends Thread {
 
 	InputStream is;

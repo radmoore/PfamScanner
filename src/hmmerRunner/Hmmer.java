@@ -1,9 +1,7 @@
 package hmmerRunner;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +9,16 @@ import javax.swing.SwingWorker;
 
 import utils.StreamGobbler;
 
+
+/**
+ * Class Hmmer
+ * Runs hmmerscan from HMMER3 against pressed Pfam-A models.
+ * The Pfam-A models muss be pressed using hmmpress, and must reside
+ * as a file Pfam-A.hmm in workingdir.
+ * 
+ * @author Andrew D. Moore <radmoore@uni-muenster.de>
+ *
+ */
 public class Hmmer extends SwingWorker<Integer, Void> {
 	
 	private static String PFAMANAME = "Pfam-A.hmm";
@@ -43,6 +51,7 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	}
 	
 	public void setVerbose(boolean verbose) {
+		System.out.println("Setting verbose mode.");
 		this.verbose = verbose;
 	}
 	
@@ -98,12 +107,12 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 		List<String> command = prepareArgs();
 		try {
       		ProcessBuilder pb = new ProcessBuilder(command);
-      		pb.redirectErrorStream(true);
+      		//pb.redirectErrorStream(true);
       		Process process = pb.start();
-      		// remove the streams quickly in sepearte threads to avoid
-      		// loosing the process
-      		StreamGobbler stg = new StreamGobbler(process.getInputStream(), verbose);
-      		stg.start();
+      		StreamGobbler stdoutStg = new StreamGobbler(process.getInputStream(), verbose);
+      		StreamGobbler stderrStg = new StreamGobbler(process.getErrorStream(), true);
+      		stdoutStg.start();
+      		stderrStg.start();
       		
       		exitValue = process.waitFor();
 

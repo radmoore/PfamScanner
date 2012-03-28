@@ -10,6 +10,14 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+
+/**
+ * Class HmmerParser
+ * 
+ * Parses the output obtained from running hmmscan to xdom.
+ * 
+ * @author Andrew D. Moore <radmoore@uni-muenster.de>
+ */
 public class HmmerParser {
 	
 	private File domtblout, outfile;
@@ -88,7 +96,7 @@ public class HmmerParser {
 				if ( (currentId != null) && (!fields[3].equals(currentId)) ) {
 					if (xdom.length() != 0) {
 						fw.write(xdom.toString()+"\n");
-						
+						System.err.println("Resolving for "+currentId);
 						// merge split hits
 						if ( merge )
 							currentDoms = mergeHits( currentDoms );
@@ -220,8 +228,9 @@ public class HmmerParser {
 	private void resolveOverlaps(TreeMap<Integer, Domain> doms, Domain lastDom) {
 		
 		ArrayList<Integer> flaggedToRemove = new ArrayList<Integer>();
+		int lastStart = 0;
 		for ( int startPos : doms.keySet() ) {
-			int lastStart = 0;
+			
 			Domain curDom = doms.get(startPos);
 			if (lastDom != null) {
 				if (lastDom.overlaps(curDom)) {
@@ -235,11 +244,12 @@ public class HmmerParser {
 			lastDom = curDom;
 		}
 		if (! flaggedToRemove.isEmpty()) {
-			for (int remPos : flaggedToRemove) {
+			for (int remPos : flaggedToRemove)
 				doms.remove(remPos);
-			}
+			
 			resolveOverlaps(doms, null);
 		}
+		
 	}
 	
 	
