@@ -95,7 +95,7 @@ public class HmmerParser {
 		
 						// resolve overlaps
 						if ( resolveOverlaps )
-							currentDoms = resolveOverlaps( currentDoms, null );
+							resolveOverlaps( currentDoms, null );
 						
 						// write the rest of the domains
 						for (int key : currentDoms.keySet()) {
@@ -217,7 +217,7 @@ public class HmmerParser {
 		return modifedDoms;
 	}
 	
-	private TreeMap<Integer, Domain> resolveOverlaps(TreeMap<Integer, Domain> doms, Domain lastDom) {
+	private void resolveOverlaps(TreeMap<Integer, Domain> doms, Domain lastDom) {
 		
 		ArrayList<Integer> flaggedToRemove = new ArrayList<Integer>();
 		for ( int startPos : doms.keySet() ) {
@@ -240,8 +240,6 @@ public class HmmerParser {
 			}
 			resolveOverlaps(doms, null);
 		}
-		return doms;
-		
 	}
 	
 	

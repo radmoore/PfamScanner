@@ -18,6 +18,7 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	private static String HMMEREXEC = "hmmscan" ;
 	private String CPUs = "1";
 	private File inputFile, outputFile, workingDir, tmpHmmerOut;
+	private boolean verbose;
 	
 	
 	public Hmmer(String inputFilePath, String outputFilePath, String workingDirPath) {
@@ -39,6 +40,10 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	
 	public void setCPUs(String CPUs) {
 		this.CPUs = CPUs;
+	}
+	
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	}
 	
 	public boolean checkParams() {
@@ -97,7 +102,7 @@ public class Hmmer extends SwingWorker<Integer, Void> {
       		Process process = pb.start();
       		// remove the streams quickly in sepearte threads to avoid
       		// loosing the process
-      		StreamGobbler stg = new StreamGobbler(process.getInputStream(), false);
+      		StreamGobbler stg = new StreamGobbler(process.getInputStream(), verbose);
       		stg.start();
       		
       		exitValue = process.waitFor();

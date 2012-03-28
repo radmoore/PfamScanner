@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 public class StreamGobbler extends Thread {
 
 	InputStream is;
-	Boolean verbose = true;
+	Boolean verbose = false;
 	    
 	public StreamGobbler(InputStream is, Boolean verbose) {
 		this.is = is;

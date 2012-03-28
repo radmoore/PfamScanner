@@ -42,6 +42,12 @@ public class HmmerRunner {
             .withLongOpt("Evalue")
             .create("E");
 	
+	@SuppressWarnings("static-access")
+	static Option verbose = OptionBuilder.withArgName( "float" )
+			.hasArg()
+            .withDescription("Verbose scan")
+            .withLongOpt("verbose")
+            .create("V");
 	
 	public static void main(String[] args) {
 		
@@ -55,6 +61,7 @@ public class HmmerRunner {
 			opt.addOption(outputFile);
 			opt.addOption(workingDir);
 			opt.addOption(evalue);
+			opt.addOption(verbose);
 			opt.addOption("M", "merge", false, "Merge split hits");
 			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads (hmmscan)");
 			opt.addOption("R", "remove-overlaps", false, "Resolve overlaps (Best match cascade)");
@@ -88,6 +95,9 @@ public class HmmerRunner {
             	if ( cl.hasOption("c") )
             		hmmer.setCPUs(cl.getOptionValue("c"));
             	
+            	if ( cl.hasOption("v") )
+            		hmmer.setVerbose(true);
+            	
             	if ( hmmer.checkParams() ) {
             		
             		int retValue = hmmer.doInBackground();
@@ -111,9 +121,12 @@ public class HmmerRunner {
 	            		hmmoutParser.writeXdom();
 	            		//hmmoutParser.destoryTempFile();
             		}
+            		else {
+            			System.err.println("ERROR: there was some problem running hmmscan. Exiting.");
+            			System.exit(-1);
+            		}
             	}
             	else {
-            		System.err.println("ERROR: there was some problem running hmmscan. Exiting.");
             		System.exit(-1);
             	}
         	}
