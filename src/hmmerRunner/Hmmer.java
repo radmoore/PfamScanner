@@ -16,7 +16,7 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	private static String PFAMANAME = "Pfam-A.hmm";
 	//private static String PFAMBNAME = "Pfam-B.hmm";
 	private static String HMMEREXEC = "hmmscan" ;
-	private String CPUs = null;
+	private String CPUs = "1";
 	private File inputFile, outputFile, workingDir, tmpHmmerOut;
 	
 	
@@ -118,8 +118,8 @@ public class Hmmer extends SwingWorker<Integer, Void> {
    		command.add("--domtblout");
    		command.add(tmpHmmerOut.getAbsolutePath());
    		command.add("--cut_ga");
-   		command.add("--cpu");
-   		command.add("2");
+   		command.add("--cpu");	
+   		command.add(CPUs);
    		command.add(workingDir.getAbsolutePath()+"/"+PFAMANAME);
    		command.add(inputFile.getAbsolutePath());
 		return command;

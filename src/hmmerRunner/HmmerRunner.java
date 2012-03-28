@@ -35,21 +35,29 @@ public class HmmerRunner {
             .isRequired()
             .create("dir");
 	
+	@SuppressWarnings("static-access")
+	static Option evalue = OptionBuilder.withArgName( "float" )
+			.hasArg()
+            .withDescription("Evalue threshold [Default: model defined gathering threshold]")
+            .withLongOpt("Evalue")
+            .create("E");
+	
 	
 	public static void main(String[] args) {
 		
 		Options opt = new Options();
 		HelpFormatter f = new HelpFormatter();
+		f.setSyntaxPrefix("Usage: ");
 		
 		try {
 
 			opt.addOption(inputFile);
 			opt.addOption(outputFile);
 			opt.addOption(workingDir);
+			opt.addOption(evalue);
 			opt.addOption("M", "merge", false, "Merge split hits");
-			opt.addOption("e", "Evalue", true, "Evalue threshold [Default: model defined]");
-			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads");
-			opt.addOption("R", "remove-overlaps", false, "Resolve overlaps");
+			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads (hmmscan)");
+			opt.addOption("R", "remove-overlaps", false, "Resolve overlaps (Best match cascade)");
 			opt.addOption("C", "collapse", false, "Collapse domains of type repeat");
             opt.addOption("h", "help", false, "Print this help message");
             //opt.addOption("p", "--parse-only", true, "Only parse output");
@@ -57,9 +65,9 @@ public class HmmerRunner {
             PosixParser parser = new PosixParser();
             CommandLine cl = parser.parse(opt, args, false);
 
-            if ( cl.hasOption('h') ) {    
-                f.printHelp("HmmerRunner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
-                		"Run HMMSCAN against Pfam defined domains\n", opt, "");
+            if ( cl.hasOption('h') ) {  
+                f.printHelp("PfamScanner [OPTIONS] -in <infile> -out <outfile> -dir <workingdir>", 
+                		"Run hmmscan against Pfam defined domains.\n", opt, "");
                 System.exit(0);
             }
             else {
@@ -91,8 +99,10 @@ public class HmmerRunner {
 	            		// consider parsing options
 	            		if (cl.hasOption("M"))
 	            			hmmoutParser.setMergeMode();
-	            		if (cl.hasOption("C"))
-	            			hmmoutParser.setCollapseMode();            		
+	            		if (cl.hasOption("C")) {
+	            			System.err.println("INFO: Collapse mode not yet supported - ignoring.");
+	            			//hmmoutParser.setCollapseMode();
+	            		}
 	            		if (cl.hasOption("R"))
 	            			hmmoutParser.setResolveOverlapsMode();
 	            		if (cl.hasOption("e"))
@@ -103,19 +113,20 @@ public class HmmerRunner {
             		}
             	}
             	else {
+            		System.err.println("ERROR: there was some problem running hmmscan. Exiting.");
             		System.exit(-1);
             	}
         	}
         }
 		catch (MissingOptionException e) {
-			f.printHelp("HmmerRunner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
-        		"Run HMMSCAN against Pfam defined domains\n", opt, "");
+			f.printHelp("PfamScanner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
+        		"Run hmmscan against Pfam defined domains\n", opt, "");
 			System.exit(0);
 		}
 		catch (MissingArgumentException e) {
 			System.err.println(e.getMessage());
-			f.printHelp("HmmerRunner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
-        		"Run HMMSCAN against Pfam defined domains\n", opt, "");
+			f.printHelp("PfamScanner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
+        		"Run hmmscan against Pfam defined domains\n", opt, "");
 		}
 		catch (ParseException e) {
 			e.printStackTrace();
