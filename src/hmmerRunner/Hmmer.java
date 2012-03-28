@@ -25,8 +25,8 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	//private static String PFAMBNAME = "Pfam-B.hmm";
 	private static String HMMEREXEC = "hmmscan" ;
 	private String CPUs = "1";
-	private File inputFile, outputFile, workingDir, tmpHmmerOut;
-	private boolean verbose;
+	private File inputFile, outputFile, workingDir, hmmoutFile;
+	private boolean verbose, saveOutFile = false;
 	
 	
 	public Hmmer(String inputFilePath, String outputFilePath, String workingDirPath) {
@@ -42,19 +42,59 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 		}
 	}
 	
-	public String getTempOutput() {
-		return this.tmpHmmerOut.getAbsolutePath();
+	/**
+	 * 
+	 * @return
+	 */
+	public String getHmmoutPath() {
+		return this.hmmoutFile.getAbsolutePath();
 	}
 	
+	/**
+	 * 
+	 * @param hmmoutFile
+	 */
+	public void setOutputFile(String hmmoutFile) {
+		try {
+			this.hmmoutFile = new File(hmmoutFile);
+			saveOutFile = true;
+		}
+		catch (Exception e) {
+			System.err.println("ERROR: could not hmmoutfile "+hmmoutFile+". Exiting.");
+			System.exit(-1);
+		}
+		
+	}
+	 
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean saveOutfile() {
+		return saveOutFile;
+	}
+	
+	/**
+	 * 
+	 * @param CPUs
+	 */
 	public void setCPUs(String CPUs) {
 		this.CPUs = CPUs;
 	}
 	
+	/**
+	 * 
+	 * @param verbose
+	 */
 	public void setVerbose(boolean verbose) {
 		System.out.println("Setting verbose mode.");
 		this.verbose = verbose;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public boolean checkParams() {
 		if ( ( !inputFile.isFile() ) || ( !inputFile.canRead() ) ) {
 			System.err.println("ERROR: could not read from "+inputFile.getName()+" or not a file. Exiting.");
@@ -88,19 +128,22 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 				return false;
 			}
 		}
-		
-		// all is well, create tmpfile
-		try {
-			tmpHmmerOut = File.createTempFile("hmmer", ".domtblout", workingDir);
-		}
-		catch (IOException ioe){
-			System.err.println("ERROR: could not create temporary file. Exiting.");
-			System.exit(-1);
+		// create temp out file, if save not requested
+		if (this.hmmoutFile == null) {
+			try {
+				hmmoutFile = File.createTempFile("hmmer", ".domtblout", workingDir);
+			}
+			catch (IOException ioe){
+				System.err.println("ERROR: could not create temporary file. Exiting.");
+				System.exit(-1);
+			}
 		}
 		return true;
 	}
 	
-	
+	/**
+	 * 
+	 */
 	protected Integer doInBackground() {
 
 		int exitValue = -1;
@@ -126,11 +169,15 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 		return exitValue;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	private List<String> prepareArgs() {
 		List<String> command = new ArrayList<String>();
    		command.add(HMMEREXEC);
    		command.add("--domtblout");
-   		command.add(tmpHmmerOut.getAbsolutePath());
+   		command.add(hmmoutFile.getAbsolutePath());
    		command.add("--cut_ga");
    		command.add("--cpu");	
    		command.add(CPUs);
@@ -138,8 +185,5 @@ public class Hmmer extends SwingWorker<Integer, Void> {
    		command.add(inputFile.getAbsolutePath());
 		return command;
 	}
-
-
-	
 
 }

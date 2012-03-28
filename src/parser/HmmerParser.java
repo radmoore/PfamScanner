@@ -60,7 +60,7 @@ public class HmmerParser {
 		return this.domtblout;
 	}
 	
-	public void destoryTempFile () {
+	public void destroyHmmoutFile () {
 		this.domtblout.delete();
 	}
 	

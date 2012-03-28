@@ -1,6 +1,7 @@
 package hmmerRunner;
 
 import java.io.File;
+import java.util.Random;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -68,6 +69,8 @@ public class HmmerRunner {
             .withLongOpt("save")
             .create("s");
 	
+	
+	
 	public static void main(String[] args) {
 		
 		Options opt = new Options();
@@ -118,13 +121,16 @@ public class HmmerRunner {
             		hmmer.setCPUs(cl.getOptionValue("c"));
             	if ( cl.hasOption("v") )
             		hmmer.setVerbose(true);
+            	if ( cl.hasOption("s") )
+            		hmmer.setOutputFile(cl.getOptionValue("s"));
+            	
             	
             	if ( hmmer.checkParams() ) {
             		
             		int retValue = hmmer.doInBackground();
             		
             		if (retValue == 0) {
-	            		String domtblout = hmmer.getTempOutput();
+	            		String domtblout = hmmer.getHmmoutPath();
 	            		HmmerParser hmmoutParser = new HmmerParser(domtblout, cl.getOptionValue("out"));
 	            	
 	            		// consider parsing options
@@ -141,20 +147,11 @@ public class HmmerRunner {
 	            		
 	            		hmmoutParser.writeXdom();
 	            		
-	            		if (cl.hasOption("s")) {
-	            			File hmmoutFile = hmmoutParser.getHmmerOutput();
-	            			String newFile = cl.getOptionValue("s");
-	            			try {
-	            				hmmoutFile.renameTo(new File(newFile));
-	            				System.out.println("INFO: hmmout saved to "+newFile);
-	            			}
-	            			catch(Exception e) {
-	            				System.err.println("ERROR: could not save hmmout to "+newFile+". hmmout saved to "+hmmoutFile.getAbsoluteFile());
-	            				System.exit(-1);
-	            			}
-	            		}
+	            		if ( hmmer.saveOutfile() )
+	            			System.out.println("INFO: hmmout saved to "+hmmer.getHmmoutPath());
+	            		
 	            		else {
-	            			hmmoutParser.destoryTempFile();
+	            			hmmoutParser.destroyHmmoutFile();
 	            		}
             		}
             		else {
