@@ -45,7 +45,8 @@ public class HmmerRunner {
 			.hasArg()
             .withDescription("The working directory. This directory must contain the Pfam-A domain models," +
             		" pressed using hmmpress and named Pfam-A.hmm. This directory must also contain" +
-            		" the hmmscan binary (version >= 3.0). The working directory is, by default, the current directory.")
+            		" the hmmscan binary (version >= 3.0). By default, the working directory is set to the" +
+            		" current directory.")
             .create("dir");
 	
 	@SuppressWarnings("static-access")
@@ -140,7 +141,13 @@ public class HmmerRunner {
             		System.exit(0);	
             	}
             	
-            	Hmmer hmmer = new Hmmer(cl.getOptionValue("in"), cl.getOptionValue("out"), cl.getOptionValue("dir"));
+            	// get working dir, or set to CRW if non provided
+            	String wd = ".";
+            	if (cl.hasOption("dir"))
+            		wd = cl.getOptionValue("dir");
+            	
+            	
+            	Hmmer hmmer = new Hmmer(cl.getOptionValue("in"), cl.getOptionValue("out"), wd);
             	
             	if ( cl.hasOption("c") )
             		hmmer.setCPUs(cl.getOptionValue("c"));
@@ -179,31 +186,32 @@ public class HmmerRunner {
 	            			hmmoutParser.destroyHmmoutFile();
 	            		}
             		}
+            		// hmmscan returned != 0
             		else {
             			System.err.println("ERROR: there was some problem running hmmscan (see error message above).");
             			System.exit(-1);
             		}
             	}
+            	// check params failed
             	else {
             		System.exit(-1);
             	}
         	}
         }
 		catch (MissingOptionException e) {
-			
-			f.printHelp("PfamScanner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
+			f.printHelp("PfamScanner [OPTIONS] -in <infile> -out <outfile> -dir <workingdir>", 
         		"Run hmmscan against Pfam defined domains\n", opt, "");
 			System.exit(-1);
 		}
 		catch (MissingArgumentException e) {
 			System.err.println(e.getMessage());
-			f.printHelp("PfamScanner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
+			f.printHelp("PfamScanner [OPTIONS] -in <infile> -out <outfile> -dir <workingdir>", 
         		"Run hmmscan against Pfam defined domains\n", opt, "");
 			System.exit(-1);
 		}
 		catch (UnrecognizedOptionException e) {
 			System.err.println(e.getMessage());
-			f.printHelp("PfamScanner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
+			f.printHelp("PfamScanner [OPTIONS] -in <infile> -out <outfile> -dir <workingdir>",
 	        		"Run hmmscan against Pfam defined domains\n", opt, "");
 			System.exit(-1);
 		}
@@ -213,11 +221,6 @@ public class HmmerRunner {
 		}
 		
 		System.exit(0);
-	}
-	
-	
-	private static void parseOnlyMode(CommandLine cl, Double evalue) {
-	
 	}
 	
 }

@@ -307,7 +307,7 @@ public class HmmerParser {
 		}
 		
 		public boolean overlaps(Domain nextDom) {
-			if (this.aliTo > nextDom.aliFrom)
+			if (this.aliTo >= nextDom.aliFrom)
 				return true;
 			return false;
 		}

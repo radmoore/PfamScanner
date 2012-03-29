@@ -23,7 +23,7 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	
 	private static String PFAMANAME = "Pfam-A.hmm";
 	//private static String PFAMBNAME = "Pfam-B.hmm";
-	private static String HMMEREXEC = "hmmscan" ;
+	private static String HMMEREXEC = "./hmmscan" ;
 	private String CPUs = "1";
 	private File inputFile, outputFile, workingDir, hmmoutFile;
 	private boolean verbose, saveOutFile = false;
@@ -163,8 +163,13 @@ public class Hmmer extends SwingWorker<Integer, Void> {
   		catch (InterruptedException ire) {
   			ire.printStackTrace();
   		}
-		catch (Exception e) {
-			e.printStackTrace();
+		catch (IOException ioe) {
+			String commandString = "";
+			for (String s: command)
+					commandString += " "+s;
+			System.err.println("ERROR: there were problems running the command:\n\n\t"+commandString+"\n");
+			System.err.println(ioe.getMessage());
+			System.exit(-1);
 		}
 		return exitValue;
 	}
