@@ -29,7 +29,7 @@ public class HmmerRunner {
 	@SuppressWarnings("static-access")
 	static Option inputFile = OptionBuilder.withArgName( "file" )
 			.hasArg()
-            .withDescription("Fasta input file")
+            .withDescription("Fasta || hmmout input file (see option parse-only)")
             .isRequired()
             .create("in");
 	
@@ -45,8 +45,7 @@ public class HmmerRunner {
 			.hasArg()
             .withDescription("The working directory. This directory must contain the Pfam-A domain models," +
             		" pressed using hmmpress and named Pfam-A.hmm. This directory must also contain" +
-            		" the hmmscan binary (version >= 3.0)")
-            .isRequired()
+            		" the hmmscan binary (version >= 3.0). The working directory is, by default, the current directory.")
             .create("dir");
 	
 	@SuppressWarnings("static-access")
@@ -69,6 +68,12 @@ public class HmmerRunner {
             .withLongOpt("save")
             .create("s");
 	
+	@SuppressWarnings("static-access")
+	static Option parseOnly = OptionBuilder.withArgName( "file" )
+            .withDescription("Parse previous run of hmmscan (save to file). If set, <in> file must be hmmscan (version 3)" +
+            		" domtblout format, and <out> the name of the xdom that should be written to.")
+            .withLongOpt("parse-only")
+            .create("p");
 	
 	
 	public static void main(String[] args) {
@@ -85,13 +90,12 @@ public class HmmerRunner {
 			opt.addOption(evalue);
 			opt.addOption(verbose);
 			opt.addOption(keepAnn);
+			opt.addOption(parseOnly);
 			opt.addOption("m", "merge", false, "Merge split hits");
 			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads (hmmscan)");
 			opt.addOption("r", "remove-overlaps", false, "Resolve overlaps (Best match cascade)");
 			opt.addOption("C", "collapse", false, "Collapse domains of type repeat");
             opt.addOption("h", "help", false, "Print this help message");
-            
-            //opt.addOption("p", "--parse-only", true, "Only parse output");
             
             PosixParser parser = new PosixParser();
             CommandLine cl = parser.parse(opt, args, false);
@@ -101,6 +105,7 @@ public class HmmerRunner {
                 		"Run hmmscan against Pfam defined domains.\n", opt, "");
                 System.exit(0);
             }
+            
             else {
             	
             	Double evalue = null;
@@ -113,6 +118,26 @@ public class HmmerRunner {
             			System.err.println("ERROR: Specified evalue not a valid number. Exiting.");
             			System.exit(-1);
             		}
+            	}
+            	// go to parse only mode
+            	if (cl.hasOption("p")) {
+            		String domtblout = cl.getOptionValue("in");
+            		HmmerParser hmmoutParser = new HmmerParser(domtblout, cl.getOptionValue("out"));
+            	
+            		// consider parsing options
+            		if (cl.hasOption("m"))
+            			hmmoutParser.setMergeMode();
+            		if (cl.hasOption("C")) {
+            			System.err.println("INFO: Collapse mode not yet supported - ignoring.");
+            			//hmmoutParser.setCollapseMode();
+            		}
+            		if (cl.hasOption("r"))
+            			hmmoutParser.setResolveOverlapsMode();
+            		if (cl.hasOption("e"))
+            			hmmoutParser.setEvalueThreshold(evalue);
+            		
+            		hmmoutParser.writeXdom();
+            		System.exit(0);	
             	}
             	
             	Hmmer hmmer = new Hmmer(cl.getOptionValue("in"), cl.getOptionValue("out"), cl.getOptionValue("dir"));
@@ -165,6 +190,7 @@ public class HmmerRunner {
         	}
         }
 		catch (MissingOptionException e) {
+			
 			f.printHelp("PfamScanner [OPTIONS] -in <infile> -o <outfile> -d <workingdir>", 
         		"Run hmmscan against Pfam defined domains\n", opt, "");
 			System.exit(-1);
@@ -187,6 +213,11 @@ public class HmmerRunner {
 		}
 		
 		System.exit(0);
+	}
+	
+	
+	private static void parseOnlyMode(CommandLine cl, Double evalue) {
+	
 	}
 	
 }

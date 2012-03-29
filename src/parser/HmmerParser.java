@@ -96,7 +96,6 @@ public class HmmerParser {
 				if ( (currentId != null) && (!fields[3].equals(currentId)) ) {
 					if (xdom.length() != 0) {
 						fw.write(xdom.toString()+"\n");
-						System.err.println("Resolving for "+currentId);
 						// merge split hits
 						if ( merge )
 							currentDoms = mergeHits( currentDoms );
