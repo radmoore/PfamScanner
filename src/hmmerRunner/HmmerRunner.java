@@ -57,7 +57,7 @@ public class HmmerRunner {
             .create("e");
 	
 	@SuppressWarnings("static-access")
-	static Option verbose = OptionBuilder.withArgName( "float" )
+	static Option verbose = OptionBuilder
             .withDescription("Verbose scan")
             .withLongOpt("verbose")
             .create("v");
@@ -76,6 +76,19 @@ public class HmmerRunner {
             .withLongOpt("parse-only")
             .create("p");
 	
+	@SuppressWarnings("static-access")
+	static Option tempDir = OptionBuilder.withArgName( "dir" )
+            .withDescription("Directory in which temporary files are to be written.")
+            .hasArg()
+            .withLongOpt("tempdir")
+            .create("t");
+	
+	@SuppressWarnings("static-access")
+	static Option modelFile = OptionBuilder.withArgName( "models" )
+            .withDescription("File containing HMMs for scan (must be indexed)")
+            .hasArg()
+            .withLongOpt("model")
+            .create("M");
 	
 	public static void main(String[] args) {
 		
@@ -92,6 +105,9 @@ public class HmmerRunner {
 			opt.addOption(verbose);
 			opt.addOption(keepAnn);
 			opt.addOption(parseOnly);
+			opt.addOption(tempDir);
+			opt.addOption(modelFile);
+			opt.addOption("acc", "accession", false, "Use Pfam (PF00002) accessions instead of IDs (7tm_2)");
 			opt.addOption("m", "merge", false, "Merge split hits");
 			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads (hmmscan)");
 			opt.addOption("r", "remove-overlaps", false, "Resolve overlaps (Best match cascade)");
@@ -142,19 +158,24 @@ public class HmmerRunner {
             	}
             	
             	// get working dir, or set to CRW if non provided
-            	String wd = ".";
+            	String wd = System.getProperty("user.dir");
             	if (cl.hasOption("dir"))
             		wd = cl.getOptionValue("dir");
             	
-            	
             	Hmmer hmmer = new Hmmer(cl.getOptionValue("in"), cl.getOptionValue("out"), wd);
             	
+            	if (cl.hasOption("M"))
+            		hmmer.setModelFile(cl.getOptionValue("M"));
             	if ( cl.hasOption("c") )
             		hmmer.setCPUs(cl.getOptionValue("c"));
             	if ( cl.hasOption("v") )
             		hmmer.setVerbose(true);
             	if ( cl.hasOption("s") )
             		hmmer.setOutputFile(cl.getOptionValue("s"));
+            	if ( cl.hasOption("t") )
+            		hmmer.setTempDir(cl.getOptionValue("t"));
+        		if (cl.hasOption("e"))
+        			hmmer.setEvalueThreshold(evalue);
             	
             	
             	if ( hmmer.checkParams() ) {
@@ -172,11 +193,12 @@ public class HmmerRunner {
 	            			System.err.println("INFO: Collapse mode not yet supported - ignoring.");
 	            			//hmmoutParser.setCollapseMode();
 	            		}
+	            		if (cl.hasOption("acc"))
+	            			hmmoutParser.setAccMode();
+	            		
 	            		if (cl.hasOption("r"))
 	            			hmmoutParser.setResolveOverlapsMode();
-	            		if (cl.hasOption("e"))
-	            			hmmoutParser.setEvalueThreshold(evalue);
-	            		
+
 	            		hmmoutParser.writeXdom();
 	            		
 	            		if ( hmmer.saveOutfile() )

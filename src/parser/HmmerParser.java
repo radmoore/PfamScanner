@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
 public class HmmerParser {
 	
 	private File domtblout, outfile;
-	private boolean merge = false, resolveOverlaps = false, collapse = false, emptyProteins = false;
+	private boolean merge = false, resolveOverlaps = false, collapse = false, emptyProteins = false, accMode = false;
 	private Double evalue = null;
 	
 	public HmmerParser(String domtbloutPath, String outfilePath) {
@@ -45,6 +46,10 @@ public class HmmerParser {
 	
 	public void setCollapseMode() {
 		this.collapse = true;
+	}
+	
+	public void setAccMode() {
+		this.accMode = true;
 	}
 	
 	public void setResolveOverlapsMode() {
@@ -78,6 +83,10 @@ public class HmmerParser {
 			BufferedReader br = new BufferedReader(new InputStreamReader(dis));
 			String currentId = null;
 			StringBuilder xdom = new StringBuilder();
+			int didField = 0;
+			
+			if ( accMode )
+				didField = 1 ;
 			
 			
 			while((line = br.readLine())!= null) {	
@@ -86,7 +95,8 @@ public class HmmerParser {
 				
 				String[] fields = line.split("\\s+");
 				
-				// 0 -> domain acc
+				// 0 -> domain id
+				// 1 -> domain acc
 				// 3 -> protein ID
 				// 5 -> protein length
 				// 12 -> domain I-evalue
@@ -120,11 +130,23 @@ public class HmmerParser {
 					xdom.setLength(0);
 					xdom.append(">"+currentId+"\t"+fields[5]);
 				}
-				if (evalue != null)
-					if (Double.parseDouble(fields[12]) > evalue)
-						continue;
+//				if (evalue != null)
+//					if (Double.parseDouble(fields[12]) > evalue)
+//						continue;
+			
+				// ensure that the version number is removed if we are
+				// in acc mode
+				String did = fields[didField] ;
+				if ( accMode ) {
+					Pattern p = Pattern.compile("PF\\d+.\\d+");
+					Matcher m = p.matcher(did);
+					if (m.find()) {
+						String[] didFields = did.split("\\.");
+						did = didFields[0];
+					}
+				}
 				
-				Domain dom = new Domain(fields[0],
+				Domain dom = new Domain(did,
 						Integer.parseInt(fields[17]), 
 						Integer.parseInt(fields[18]),
 						Integer.parseInt(fields[15]),
@@ -242,7 +264,7 @@ public class HmmerParser {
 			lastStart = startPos;
 			lastDom = curDom;
 		}
-		if (! flaggedToRemove.isEmpty()) {
+		if (! flaggedToRemove.isEmpty() ) {
 			for (int remPos : flaggedToRemove)
 				doms.remove(remPos);
 			

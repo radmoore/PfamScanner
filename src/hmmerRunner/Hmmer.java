@@ -21,19 +21,23 @@ import utils.StreamGobbler;
  */
 public class Hmmer extends SwingWorker<Integer, Void> {
 	
-	private static String PFAMANAME = "Pfam-A.hmm";
+	private String modelPath, evalueString;
 	//private static String PFAMBNAME = "Pfam-B.hmm";
-	private static String HMMEREXEC = "./hmmscan" ;
+	private String hmmerscanBin = "./hmmscan" ;
 	private String CPUs = "1";
-	private File inputFile, outputFile, workingDir, hmmoutFile;
+	private File inputFile, outputFile, workingDir, hmmoutFile, tempDir;
 	private boolean verbose, saveOutFile = false;
 	
 	
 	public Hmmer(String inputFilePath, String outputFilePath, String workingDirPath) {
+		
 		try {
 			this.inputFile = new File(inputFilePath);
 			this.outputFile = new File(outputFilePath);
 			this.workingDir = new File(workingDirPath);
+			this.hmmerscanBin = workingDir.getAbsolutePath()+"/hmmscan";
+			this.modelPath = workingDir.getAbsolutePath()+"/Pfam-A.hmm";
+			this.tempDir = new File(System.getProperty("java.io.tmpdir"));
 		}
 		catch(Exception e) {
 			System.err.println("ERROR: could not create files. Exiting.");
@@ -52,6 +56,22 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	
 	/**
 	 * 
+	 * @param hmmName
+	 */
+	public void setModelFile(String hmmName) {
+		this.modelPath = workingDir.getAbsolutePath()+"/"+hmmName;
+	}
+	
+	/**
+	 * 
+	 * @param evalue
+	 */
+	public void setEvalueThreshold(double evalue) {
+		this.evalueString = ""+evalue;
+	}
+	
+	/**
+	 * 
 	 * @param hmmoutFile
 	 */
 	public void setOutputFile(String hmmoutFile) {
@@ -64,6 +84,16 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 			System.exit(-1);
 		}
 		
+	}
+	
+	public void setTempDir(String tempDirPath) {
+		try {
+			this.tempDir = new File(tempDirPath);
+		}
+		catch (Exception e) {
+			System.err.println("ERROR: could not set temp. dir "+tempDirPath+". Exiting.");
+			System.exit(-1);
+		}
 	}
 	 
 	/**
@@ -97,7 +127,7 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	 */
 	public boolean checkParams() {
 		if ( ( !inputFile.isFile() ) || ( !inputFile.canRead() ) ) {
-			System.err.println("ERROR: could not read from "+inputFile.getName()+" or not a file. Exiting.");
+			System.err.println("ERROR: could not read from "+inputFile.getAbsolutePath()+" or not a file. Exiting.");
 			return false;
 		}
 		if ( (!outputFile.isFile()) ) { 
@@ -115,7 +145,12 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 		}
 		
 		if (! workingDir.isDirectory() ) {
-			System.err.println("ERROR: "+workingDir.getName()+" is not a directory. Exiting.");
+			System.err.println("ERROR: "+workingDir.getAbsolutePath()+" is not a directory. Exiting.");
+			return false;
+		}
+		
+		if (! tempDir.isDirectory() ) {
+			System.err.println("ERROR: "+tempDir.getAbsolutePath()+" is not a directory. Exiting.");
 			return false;
 		}
 		
@@ -128,10 +163,10 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 				return false;
 			}
 		}
-		// create temp out file, if save not requested
+		// domtblout file
 		if (this.hmmoutFile == null) {
 			try {
-				hmmoutFile = File.createTempFile("hmmer", ".domtblout", workingDir);
+				hmmoutFile = File.createTempFile("hmmscan_run_", ".domtblout", tempDir.getAbsoluteFile());
 			}
 			catch (IOException ioe){
 				System.err.println("ERROR: could not create temporary file. Exiting.");
@@ -180,13 +215,18 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	 */
 	private List<String> prepareArgs() {
 		List<String> command = new ArrayList<String>();
-   		command.add(HMMEREXEC);
+   		command.add(hmmerscanBin);
    		command.add("--domtblout");
    		command.add(hmmoutFile.getAbsolutePath());
-   		command.add("--cut_ga");
+   		if (evalueString == null)
+   			command.add("--cut_ga");
+   		else {
+   			command.add("-E");
+   			command.add(evalueString);
+   		}
    		command.add("--cpu");	
    		command.add(CPUs);
-   		command.add(workingDir.getAbsolutePath()+"/"+PFAMANAME);
+   		command.add(modelPath);
    		command.add(inputFile.getAbsolutePath());
 		return command;
 	}
