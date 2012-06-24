@@ -1,4 +1,4 @@
-package parser;
+package info.radm.scanner.hmmer;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;

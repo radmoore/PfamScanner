@@ -1,4 +1,6 @@
-package hmmerRunner;
+package info.radm.scanner.hmmer;
+
+import info.radm.scanner.utils.StreamGobbler;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +9,6 @@ import java.util.List;
 
 import javax.swing.SwingWorker;
 
-import utils.StreamGobbler;
 
 
 /**
@@ -179,7 +180,7 @@ public class Hmmer extends SwingWorker<Integer, Void> {
 	/**
 	 * 
 	 */
-	protected Integer doInBackground() {
+	public Integer doInBackground() {
 
 		int exitValue = -1;
 		List<String> command = prepareArgs();

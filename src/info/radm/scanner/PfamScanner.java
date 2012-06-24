@@ -1,7 +1,8 @@
-package hmmerRunner;
+package info.radm.scanner;
 
-import java.io.File;
-import java.util.Random;
+
+import info.radm.scanner.hmmer.Hmmer;
+import info.radm.scanner.hmmer.HmmerParser;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -14,7 +15,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.cli.UnrecognizedOptionException;
 
-import parser.HmmerParser;
 
 /**
  * Class HmmerRunner
@@ -24,7 +24,7 @@ import parser.HmmerParser;
  * @author Andrew D. Moore <radmoore@uni-muenster.de>
  *
  */
-public class HmmerRunner {
+public class PfamScanner {
 	
 	@SuppressWarnings("static-access")
 	static Option inputFile = OptionBuilder.withArgName( "file" )
