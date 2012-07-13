@@ -176,9 +176,9 @@ public class HmmerParser {
 						
 						// write the rest of the domains
 						for (int key : currentDoms.keySet()) {
-							Domain cdom = currentDoms.get(key);
-							
-							fw.write(cdom.toString()+"\n");
+							Domain cdom;
+							if ( (cdom = currentDoms.get(key)) != null)
+									fw.write(cdom.toString()+"\n");
 						}
 					}
 					xdom.setLength(0);
@@ -225,8 +225,8 @@ public class HmmerParser {
 			
 				for (int key : currentDoms.keySet()) {
 					Domain cdom = currentDoms.get(key);
-					
-					fw.write(cdom.toString()+"\n");
+					if ( (cdom = currentDoms.get(key)) != null)
+						fw.write(cdom.toString()+"\n");
 				}
 			}			
 			fis.close();
@@ -270,16 +270,6 @@ public class HmmerParser {
 				
 				String[] fields = line.split("\\s+");
 				
-				// 0 -> domain id
-				// 1 -> domain acc
-				// 3 -> protein ID
-				// 5 -> protein length
-				// 12 -> domain I-evalue
-				// 15, 16 -> hmm coord
-				// 17, 18 -> align coord
-				// 19, 20 -> env coord
-				
-				
 				// 0 -> protein id
 				// 5 -> domain acc
 				// 6 -> domain name (id)
@@ -301,8 +291,8 @@ public class HmmerParser {
 						// write the rest of the domains
 						for (int key : currentDoms.keySet()) {
 							Domain cdom = currentDoms.get(key);
-							
-							fw.write(cdom.toString()+"\n");
+							if ( (cdom = currentDoms.get(key)) != null)
+								fw.write(cdom.toString()+"\n");
 						}
 					}
 					xdom.setLength(0);
@@ -349,8 +339,8 @@ public class HmmerParser {
 			
 				for (int key : currentDoms.keySet()) {
 					Domain cdom = currentDoms.get(key);
-					
-					fw.write(cdom.toString()+"\n");
+					if ( (cdom = currentDoms.get(key)) != null)
+						fw.write(cdom.toString()+"\n");
 				}
 			}			
 			fis.close();
