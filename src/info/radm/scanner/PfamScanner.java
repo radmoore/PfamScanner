@@ -90,6 +90,14 @@ public class PfamScanner {
             .withLongOpt("model")
             .create("M");
 	
+	@SuppressWarnings("static-access")
+	static Option removeEmpties = OptionBuilder
+            .withDescription("Remove proteins without domains (e.g. if all domains are " +
+            		"below specified e-value threshold)")
+            .withLongOpt("no-empties")
+            .create("ne");
+			
+	
 	public static void main(String[] args) {
 		
 		Options opt = new Options();
@@ -107,6 +115,7 @@ public class PfamScanner {
 			opt.addOption(parseOnly);
 			opt.addOption(tempDir);
 			opt.addOption(modelFile);
+			opt.addOption(removeEmpties);
 			opt.addOption("acc", "accession", false, "Use Pfam (PF00002) accessions instead of IDs (7tm_2)");
 			opt.addOption("m", "merge", false, "Merge split hits");
 			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads (hmmscan)");
@@ -152,6 +161,8 @@ public class PfamScanner {
             			hmmoutParser.setResolveOverlapsMode();
             		if (cl.hasOption("e"))
             			hmmoutParser.setEvalueThreshold(evalue);
+            		if (cl.hasOption("ne"))
+            			hmmoutParser.setRemoveEmpties();
             		
             		if (HmmerParser.determineFileFormat(domtbloutPath) == HmmerParser.HMMSCAN) {
             			System.out.println("File format: hmmscan");

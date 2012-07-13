@@ -23,7 +23,8 @@ import java.util.regex.Pattern;
 public class HmmerParser {
 	
 	private File domtblout, outfile;
-	private boolean merge = false, resolveOverlaps = false, collapse = false, emptyProteins = false, accMode = false;
+	private boolean merge = false, resolveOverlaps = false, collapse = false, accMode = false,
+			removeEmpties = false;
 	private Double evalue = null;
 	public static int HMMSCAN = 0;
 	public static int PFAMSCAN = 1;
@@ -90,11 +91,6 @@ public class HmmerParser {
 		this.merge = true;
 	}
 	
-	public void setEmptyProteins(boolean empties) {
-		this.emptyProteins = empties;
-	}
-	
-	
 	public void setCollapseMode() {
 		this.collapse = true;
 	}
@@ -105,6 +101,10 @@ public class HmmerParser {
 	
 	public void setResolveOverlapsMode() {
 		this.resolveOverlaps = true;
+	}
+	
+	public void setRemoveEmpties() {
+		this.removeEmpties = true;
 	}
 	
 	// handle wrong format _before_ running hmmer
@@ -119,7 +119,6 @@ public class HmmerParser {
 	public void destroyHmmoutFile () {
 		this.domtblout.delete();
 	}
-	
 	
 	public boolean isHmmscanOut() {
 		return true;
@@ -165,20 +164,25 @@ public class HmmerParser {
 				// 19, 20 -> env coord
 				if ( (currentId != null) && (!fields[3].equals(currentId)) ) {
 					if (xdom.length() != 0) {
-						fw.write(xdom.toString()+"\n");
-						// merge split hits
-						if ( merge )
-							currentDoms = mergeHits( currentDoms );
-		
-						// resolve overlaps
-						if ( resolveOverlaps )
-							resolveOverlaps( currentDoms, null );
-						
-						// write the rest of the domains
-						for (int key : currentDoms.keySet()) {
-							Domain cdom;
-							if ( (cdom = currentDoms.get(key)) != null)
-									fw.write(cdom.toString()+"\n");
+
+						if (! (currentDoms.isEmpty() && removeEmpties))
+							fw.write(xdom.toString()+"\n");
+
+						if (! currentDoms.isEmpty() ) {
+							// merge split hits
+							if ( merge )
+								currentDoms = mergeHits( currentDoms );
+			
+							// resolve overlaps
+							if ( resolveOverlaps )
+								resolveOverlaps( currentDoms, null );
+													
+							// write the rest of the domains
+							for (int key : currentDoms.keySet()) {
+								Domain cdom;
+								if ( (cdom = currentDoms.get(key)) != null)
+										fw.write(cdom.toString()+"\n");
+							}
 						}
 					}
 					xdom.setLength(0);
@@ -216,17 +220,20 @@ public class HmmerParser {
 				currentDoms.put(Integer.parseInt(fields[17]), dom);
 			}
 			if (xdom.length() != 0) {
-				fw.write(xdom.toString()+"\n");
-				if ( merge )
-					currentDoms = mergeHits( currentDoms );
+				if (! (currentDoms.isEmpty() && removeEmpties))
+					fw.write(xdom.toString()+"\n");
+				if (! currentDoms.isEmpty() ) {
+					if ( merge )
+						currentDoms = mergeHits( currentDoms );
+					
+					if ( resolveOverlaps )
+						resolveOverlaps( currentDoms, null );
 				
-				if ( resolveOverlaps )
-					resolveOverlaps( currentDoms, null );
-			
-				for (int key : currentDoms.keySet()) {
-					Domain cdom = currentDoms.get(key);
-					if ( (cdom = currentDoms.get(key)) != null)
-						fw.write(cdom.toString()+"\n");
+					for (int key : currentDoms.keySet()) {
+						Domain cdom = currentDoms.get(key);
+						if ( (cdom = currentDoms.get(key)) != null)
+							fw.write(cdom.toString()+"\n");
+					}
 				}
 			}			
 			fis.close();
