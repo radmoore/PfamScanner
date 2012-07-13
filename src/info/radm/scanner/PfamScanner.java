@@ -138,8 +138,8 @@ public class PfamScanner {
             	}
             	// go to parse only mode
             	if (cl.hasOption("p")) {
-            		String domtblout = cl.getOptionValue("in");
-            		HmmerParser hmmoutParser = new HmmerParser(domtblout, cl.getOptionValue("out"));
+            		String domtbloutPath = cl.getOptionValue("in");
+            		HmmerParser hmmoutParser = new HmmerParser(domtbloutPath, cl.getOptionValue("out"));
             	
             		// consider parsing options
             		if (cl.hasOption("m"))
@@ -153,7 +153,18 @@ public class PfamScanner {
             		if (cl.hasOption("e"))
             			hmmoutParser.setEvalueThreshold(evalue);
             		
-            		hmmoutParser.writeXdom();
+            		if (HmmerParser.determineFileFormat(domtbloutPath) == HmmerParser.HMMSCAN) {
+            			System.out.println("File format: hmmscan");
+            			hmmoutParser.hmmscan2xdom();
+            		}
+            		else if (HmmerParser.determineFileFormat(domtbloutPath) == HmmerParser.PFAMSCAN) {
+            			System.out.println("File format: pfamscan");
+            			hmmoutParser.pfamscan2xdom();
+            		}
+            		else {
+            			System.err.println("ERROR: Cannot determine file type of "+domtbloutPath);
+            			System.exit(-1);
+            		}
             		System.exit(0);	
             	}
             	
@@ -199,7 +210,7 @@ public class PfamScanner {
 	            		if (cl.hasOption("r"))
 	            			hmmoutParser.setResolveOverlapsMode();
 
-	            		hmmoutParser.writeXdom();
+	            		hmmoutParser.hmmscan2xdom();
 	            		
 	            		if ( hmmer.saveOutfile() )
 	            			System.out.println("INFO: hmmout saved to "+hmmer.getHmmoutPath());

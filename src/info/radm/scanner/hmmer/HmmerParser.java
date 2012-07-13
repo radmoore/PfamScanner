@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.TreeMap;
@@ -24,8 +25,12 @@ public class HmmerParser {
 	private File domtblout, outfile;
 	private boolean merge = false, resolveOverlaps = false, collapse = false, emptyProteins = false, accMode = false;
 	private Double evalue = null;
+	public static int HMMSCAN = 0;
+	public static int PFAMSCAN = 1;
+	public static int UNKNOWN = -1;
 	
 	public HmmerParser(String domtbloutPath, String outfilePath) {
+		
 		try {
 			domtblout = new File(domtbloutPath);
 			outfile = new File(outfilePath);
@@ -33,6 +38,52 @@ public class HmmerParser {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static int determineFileFormat(String domtbloutPath) {
+		
+		String line = null;
+		int type = -1;
+		try {
+			FileInputStream fis = new FileInputStream(new File(domtbloutPath));
+			DataInputStream dis = new DataInputStream(fis);
+			BufferedReader br = new BufferedReader(new InputStreamReader(dis));
+			Pattern comment = Pattern.compile("^#.*");
+			Pattern empty = Pattern.compile("^$");
+			Pattern pfamId = Pattern.compile("PF\\d+.\\d+");
+			while ( (line = br.readLine()) != null ) {
+				
+				if (comment.matcher(line).matches())
+					continue;
+				if (empty.matcher(line).matches())
+					continue;
+				
+				
+				String[] fields = line.split("\\s+");
+				if (fields.length <= 18) {
+					
+					Matcher m = pfamId.matcher(fields[5]);
+					if (m.find()) {
+						type = PFAMSCAN;
+						break;
+					}
+				}
+				else if (fields.length > 18) {
+					Matcher m = pfamId.matcher(fields[1]);
+					if (m.find()) {
+						type = HMMSCAN;
+						break;
+					}
+				}
+			}
+			br.close();
+			dis.close();
+			fis.close();
+		}
+		catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+		return type;
 	}
 	
 	public void setMergeMode() {
@@ -69,7 +120,16 @@ public class HmmerParser {
 		this.domtblout.delete();
 	}
 	
-	public void writeXdom() {
+	
+	public boolean isHmmscanOut() {
+		return true;
+	}
+	
+	public boolean isPfamscanOut() {
+		return true;
+	}
+	
+	public void hmmscan2xdom() {
 		
 		TreeMap<Integer, Domain> currentDoms = new TreeMap<Integer, Domain>();
 		Pattern comment = Pattern.compile("^#.+");
@@ -130,9 +190,9 @@ public class HmmerParser {
 					xdom.setLength(0);
 					xdom.append(">"+currentId+"\t"+fields[5]);
 				}
-//				if (evalue != null)
-//					if (Double.parseDouble(fields[12]) > evalue)
-//						continue;
+				if (evalue != null)
+					if (Double.parseDouble(fields[12]) > evalue)
+						continue;
 			
 				// ensure that the version number is removed if we are
 				// in acc mode
@@ -178,6 +238,131 @@ public class HmmerParser {
 			e.printStackTrace();
 		}	
 	}
+	
+	//<seq id> <alignment start> <alignment end> <envelope start> <envelope end> 
+	//<hmm acc> <hmm name> <type> <hmm start> <hmm end> <hmm length> <bit score> <E-value> <significance> <clan>
+	public void pfamscan2xdom() {
+		
+		TreeMap<Integer, Domain> currentDoms = new TreeMap<Integer, Domain>();
+		Pattern comment = Pattern.compile("^#.*");
+		Pattern empty = Pattern.compile("^$");
+		
+		try {
+			FileWriter fw = new FileWriter(outfile);
+					
+			String line;
+			FileInputStream fis = new FileInputStream(this.domtblout);
+			DataInputStream dis = new DataInputStream(fis);
+			BufferedReader br = new BufferedReader(new InputStreamReader(dis));
+			String currentId = null;
+			StringBuilder xdom = new StringBuilder();
+			int didField = 6;
+			
+			if ( accMode )
+				didField = 5 ;
+			
+			
+			while((line = br.readLine())!= null) {	
+				if (comment.matcher(line).matches())
+					continue;
+				if (empty.matcher(line).matches())
+					continue;
+				
+				String[] fields = line.split("\\s+");
+				
+				// 0 -> domain id
+				// 1 -> domain acc
+				// 3 -> protein ID
+				// 5 -> protein length
+				// 12 -> domain I-evalue
+				// 15, 16 -> hmm coord
+				// 17, 18 -> align coord
+				// 19, 20 -> env coord
+				
+				
+				// 0 -> protein id
+				// 5 -> domain acc
+				// 6 -> domain name (id)
+				// 12 -> domain evalue
+				// 8, 9 -> hmm coord
+				// 1, 2 -> align coord
+				// 3, 4 -> env coord
+				if ( (currentId != null) && (!fields[0].equals(currentId)) ) {
+					if (xdom.length() != 0) {
+						fw.write(xdom.toString()+"\n");
+						// merge split hits
+						if ( merge )
+							currentDoms = mergeHits( currentDoms );
+		
+						// resolve overlaps
+						if ( resolveOverlaps )
+							resolveOverlaps( currentDoms, null );
+						
+						// write the rest of the domains
+						for (int key : currentDoms.keySet()) {
+							Domain cdom = currentDoms.get(key);
+							
+							fw.write(cdom.toString()+"\n");
+						}
+					}
+					xdom.setLength(0);
+					currentDoms.clear();
+				}
+				
+				if (xdom.length() == 0) {
+					currentId = fields[0];
+					xdom.setLength(0);
+					xdom.append(">"+currentId);
+				}
+				if (evalue != null)
+					if (Double.parseDouble(fields[12]) > evalue)
+						continue;
+			
+				// ensure that the version number is removed if we are
+				// in acc mode
+				String did = fields[didField] ;
+				if ( accMode ) {
+					Pattern p = Pattern.compile("PF\\d+.\\d+");
+					Matcher m = p.matcher(did);
+					if (m.find()) {
+						String[] didFields = did.split("\\.");
+						did = didFields[0];
+					}
+				}
+
+				Domain dom = new Domain(did,
+						Integer.parseInt(fields[1]), 
+						Integer.parseInt(fields[2]),
+						Integer.parseInt(fields[8]),
+						Integer.parseInt(fields[9]),
+						Double.parseDouble(fields[12]));
+				
+				currentDoms.put(Integer.parseInt(fields[1]), dom);
+			}
+			if (xdom.length() != 0) {
+				fw.write(xdom.toString()+"\n");
+				if ( merge )
+					currentDoms = mergeHits( currentDoms );
+				
+				if ( resolveOverlaps )
+					resolveOverlaps( currentDoms, null );
+			
+				for (int key : currentDoms.keySet()) {
+					Domain cdom = currentDoms.get(key);
+					
+					fw.write(cdom.toString()+"\n");
+				}
+			}			
+			fis.close();
+			dis.close();
+			br.close();
+			fw.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}	
+	}
+	
 	
 	private TreeMap<Integer, Domain> mergeHits(TreeMap<Integer, Domain> doms) {
 		
