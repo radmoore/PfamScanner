@@ -162,7 +162,14 @@ public class HmmerParser {
 				// 15, 16 -> hmm coord
 				// 17, 18 -> align coord
 				// 19, 20 -> env coord
-				if ( (currentId != null) && (!fields[3].equals(currentId)) ) {
+				String thisId = fields[3];
+				Pattern p = Pattern.compile("\\w+.\\d+");
+				Matcher m = p.matcher(thisId);
+				if (m.find()) {
+					String[] pidFields = thisId.split("\\.");
+					thisId = pidFields[0];
+				}
+				if ( (currentId != null) && (!thisId.equals(currentId)) ) {
 					if (xdom.length() != 0) {
 
 						if (! (currentDoms.isEmpty() && removeEmpties))
@@ -191,6 +198,13 @@ public class HmmerParser {
 				
 				if (xdom.length() == 0) {
 					currentId = fields[3];
+					p = Pattern.compile("\\w+.\\d+");
+					m = p.matcher(currentId);
+					if (m.find()) {
+						String[] pidFields = currentId.split("\\.");
+						currentId = pidFields[0];
+					}
+					System.out.println("Current id: "+currentId);
 					xdom.setLength(0);
 					xdom.append(">"+currentId+"\t"+fields[5]);
 				}
@@ -202,8 +216,8 @@ public class HmmerParser {
 				// in acc mode
 				String did = fields[didField] ;
 				if ( accMode ) {
-					Pattern p = Pattern.compile("PF\\d+.\\d+");
-					Matcher m = p.matcher(did);
+					p = Pattern.compile("PF\\d+.\\d+");
+					m = p.matcher(did);
 					if (m.find()) {
 						String[] didFields = did.split("\\.");
 						did = didFields[0];
@@ -284,7 +298,14 @@ public class HmmerParser {
 				// 8, 9 -> hmm coord
 				// 1, 2 -> align coord
 				// 3, 4 -> env coord
-				if ( (currentId != null) && (!fields[0].equals(currentId)) ) {
+				String thisId = fields[0];
+				Pattern p = Pattern.compile("\\w+.\\d+");
+				Matcher m = p.matcher(thisId);
+				if (m.find()) {
+					String[] pidFields = thisId.split("\\.");
+					thisId = pidFields[0];
+				}
+				if ( (currentId != null) && (!thisId.equals(currentId)) ) {
 					if (xdom.length() != 0) {
 						fw.write(xdom.toString()+"\n");
 						// merge split hits
@@ -308,6 +329,12 @@ public class HmmerParser {
 				
 				if (xdom.length() == 0) {
 					currentId = fields[0];
+					p = Pattern.compile("\\w+.\\d+");
+					m = p.matcher(currentId);
+					if (m.find()) {
+						String[] pidFields = currentId.split("\\.");
+						currentId = pidFields[0];
+					}
 					xdom.setLength(0);
 					xdom.append(">"+currentId);
 				}
@@ -319,8 +346,8 @@ public class HmmerParser {
 				// in acc mode
 				String did = fields[didField] ;
 				if ( accMode ) {
-					Pattern p = Pattern.compile("PF\\d+.\\d+");
-					Matcher m = p.matcher(did);
+					p = Pattern.compile("PF\\d+.\\d+");
+					m = p.matcher(did);
 					if (m.find()) {
 						String[] didFields = did.split("\\.");
 						did = didFields[0];
