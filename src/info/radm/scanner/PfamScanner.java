@@ -71,8 +71,10 @@ public class PfamScanner {
 	
 	@SuppressWarnings("static-access")
 	static Option parseOnly = OptionBuilder.withArgName( "file" )
-            .withDescription("Parse previous run of hmmscan (save to file). If set, <in> file must be hmmscan (version 3)" +
-            		" domtblout format, and <out> the name of the xdom that should be written to.")
+            .withDescription("Parse previous run of hmmscan/pfamscan (save to file). " +
+            		"If set, <in> file must be pfamscan format or hmmscan (version 3)" +
+            		" domtblout format, and <out> the name of the xdom that should be written to. " +
+            		"The file format of <in> will be determined automatically.")
             .withLongOpt("parse-only")
             .create("p");
 	
@@ -165,11 +167,9 @@ public class PfamScanner {
             			hmmoutParser.setRemoveEmpties();
             		
             		if (HmmerParser.determineFileFormat(domtbloutPath) == HmmerParser.HMMSCAN) {
-            			System.out.println("File format: hmmscan");
             			hmmoutParser.hmmscan2xdom();
             		}
             		else if (HmmerParser.determineFileFormat(domtbloutPath) == HmmerParser.PFAMSCAN) {
-            			System.out.println("File format: pfamscan");
             			hmmoutParser.pfamscan2xdom();
             		}
             		else {
