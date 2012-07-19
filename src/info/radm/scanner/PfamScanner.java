@@ -121,6 +121,7 @@ public class PfamScanner {
 			opt.addOption("acc", "accession", false, "Use Pfam (PF00002) accessions instead of IDs (7tm_2)");
 			opt.addOption("m", "merge", false, "Merge split hits");
 			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads (hmmscan)");
+			opt.addOption("cm", "clan-mapping", false, "Map Pfam IDs to clans where applicable (only available from pfamscan output)");
 			opt.addOption("r", "remove-overlaps", false, "Resolve overlaps (Best match cascade)");
 			opt.addOption("C", "collapse", false, "Collapse domains of type repeat");
             opt.addOption("h", "help", false, "Print this help message");
@@ -155,6 +156,8 @@ public class PfamScanner {
             		// consider parsing options
             		if (cl.hasOption("m"))
             			hmmoutParser.setMergeMode();
+            		if (cl.hasOption("cm"))
+            			hmmoutParser.setClanMode();
             		if (cl.hasOption("C")) {
             			System.err.println("INFO: Collapse mode not yet supported - ignoring.");
             			//hmmoutParser.setCollapseMode();

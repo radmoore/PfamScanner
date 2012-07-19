@@ -24,7 +24,7 @@ public class HmmerParser {
 	
 	private File domtblout, outfile;
 	private boolean merge = false, resolveOverlaps = false, collapse = false, accMode = false,
-			removeEmpties = false;
+			removeEmpties = false, clanMode = false;
 	private Double evalue = null;
 	public static int HMMSCAN = 0;
 	public static int PFAMSCAN = 1;
@@ -97,6 +97,10 @@ public class HmmerParser {
 	
 	public void setAccMode() {
 		this.accMode = true;
+	}
+	
+	public void setClanMode() {
+		this.clanMode = true;
 	}
 	
 	public void setResolveOverlapsMode() {
