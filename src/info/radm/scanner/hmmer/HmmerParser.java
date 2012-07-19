@@ -1,5 +1,7 @@
 package info.radm.scanner.hmmer;
 
+
+
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
@@ -26,9 +28,11 @@ public class HmmerParser {
 	private boolean merge = false, resolveOverlaps = false, collapse = false, accMode = false,
 			removeEmpties = false, clanMode = false;
 	private Double evalue = null;
+	private int repNo = 0;
 	public static int HMMSCAN = 0;
 	public static int PFAMSCAN = 1;
 	public static int UNKNOWN = -1;
+	
 	
 	public HmmerParser(String domtbloutPath, String outfilePath) {
 		
@@ -91,8 +95,9 @@ public class HmmerParser {
 		this.merge = true;
 	}
 	
-	public void setCollapseMode() {
+	public void setCollapseMode(int repNo) {
 		this.collapse = true;
+		this.repNo = repNo;
 	}
 	
 	public void setAccMode() {
@@ -319,6 +324,9 @@ public class HmmerParser {
 						// resolve overlaps
 						if ( resolveOverlaps )
 							resolveOverlaps( currentDoms, null );
+		
+						if ( collapse )
+							currentDoms = collapseRepeats( currentDoms );
 						
 						// write the rest of the domains
 						for (int key : currentDoms.keySet()) {
@@ -381,6 +389,9 @@ public class HmmerParser {
 				if ( resolveOverlaps )
 					resolveOverlaps( currentDoms, null );
 			
+				if ( collapse )
+					currentDoms = collapseRepeats( currentDoms );
+				
 				for (int key : currentDoms.keySet()) {
 					Domain cdom = currentDoms.get(key);
 					if ( (cdom = currentDoms.get(key)) != null)
@@ -395,6 +406,53 @@ public class HmmerParser {
 		catch (Exception e) {
 			e.printStackTrace();
 		}	
+	}
+	
+	private TreeMap<Integer, Domain> collapseRepeats(TreeMap<Integer, Domain> doms) {
+		
+		TreeMap<Integer, Domain> collpasedDomains = new TreeMap<Integer, Domain>();
+		ArrayList<Domain> domainHolding = new ArrayList<Domain>();
+		
+		Domain lastDom = null;
+		for (Domain cDom: doms.values()) {
+			
+			if (lastDom == null) {
+				domainHolding.add(cDom);
+				lastDom = cDom;
+				continue;
+			}
+			
+			if ( lastDom.ID.equals(cDom.ID) ) 
+				domainHolding.add(cDom);
+			
+			else {
+				if (domainHolding.size() >= repNo) {
+					Domain firstRepDom = domainHolding.get(0);
+					Domain d = new Domain(lastDom.ID, firstRepDom.aliFrom, lastDom.aliTo, -1, -1, -1);
+					d.setComment("collapsed "+domainHolding.size()+" instances");
+					collpasedDomains.put(d.aliFrom, d);
+				}
+				else {
+					for (Domain d : domainHolding)
+						collpasedDomains.put(d.aliFrom, d);
+					
+				}
+				domainHolding.clear();
+				domainHolding.add(cDom);
+			}
+			lastDom = cDom;
+		}
+		if (domainHolding.size() >= repNo) {
+			Domain firstRepDom = domainHolding.get(0);
+			Domain d = new Domain(lastDom.ID, firstRepDom.aliFrom, lastDom.aliTo, -1, -1, -1);
+			d.setComment("collapsed "+domainHolding.size()+" instances");
+			collpasedDomains.put(d.aliFrom, d);
+		}
+		else {
+			for (Domain d : domainHolding)
+				collpasedDomains.put(d.aliFrom, d);
+		}
+		return collpasedDomains;
 	}
 	
 	
@@ -498,6 +556,7 @@ public class HmmerParser {
 		private int aliFrom, aliTo, hmmFrom, hmmTo;
 		private double evalue;
 		private String ID, comment;
+		private boolean isCollapsed = false;
 		
 		public Domain(String ID, int aliFrom, int aliTo, int hmmFrom, int hmmTo, double evalue) {
 			this.aliFrom = aliFrom;
@@ -514,6 +573,10 @@ public class HmmerParser {
 		
 		public void setComment(String comment) {
 			this.comment = comment;
+		}
+		
+		public void setCollpased() {
+			this.isCollapsed = true;
 		}
 		
 		public int getAliFrom() {
@@ -538,6 +601,10 @@ public class HmmerParser {
 		
 		public double getEvalue() {
 			return this.evalue;
+		}
+
+		public boolean isCollapsed() {
+			return this.isCollapsed;
 		}
 		
 		public String toString() {

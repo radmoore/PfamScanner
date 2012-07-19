@@ -86,6 +86,13 @@ public class PfamScanner {
             .create("t");
 	
 	@SuppressWarnings("static-access")
+	static Option collapse = OptionBuilder.withArgName( "<int>" )
+            .withDescription("Collpase identical domains occurring in succession <int> or more times")
+            .hasArg()
+            .withLongOpt("collpase")
+            .create("C");
+	
+	@SuppressWarnings("static-access")
 	static Option modelFile = OptionBuilder.withArgName( "models" )
             .withDescription("File containing HMMs for scan (must be indexed)")
             .hasArg()
@@ -118,12 +125,12 @@ public class PfamScanner {
 			opt.addOption(tempDir);
 			opt.addOption(modelFile);
 			opt.addOption(removeEmpties);
+			opt.addOption(collapse);
 			opt.addOption("acc", "accession", false, "Use Pfam (PF00002) accessions instead of IDs (7tm_2)");
 			opt.addOption("m", "merge", false, "Merge split hits");
 			opt.addOption("c", "cpu", true, "Number of parallel CPU workers to use for multithreads (hmmscan)");
 			opt.addOption("cm", "clan-mapping", false, "Map Pfam IDs to clans where applicable (only available from pfamscan output)");
 			opt.addOption("r", "remove-overlaps", false, "Resolve overlaps (Best match cascade)");
-			opt.addOption("C", "collapse", false, "Collapse domains of type repeat");
             opt.addOption("h", "help", false, "Print this help message");
             
             PosixParser parser = new PosixParser();
@@ -159,8 +166,16 @@ public class PfamScanner {
             		if (cl.hasOption("cm"))
             			hmmoutParser.setClanMode();
             		if (cl.hasOption("C")) {
-            			System.err.println("INFO: Collapse mode not yet supported - ignoring.");
-            			//hmmoutParser.setCollapseMode();
+            			
+            			try {
+            				 int repNo = Integer.valueOf(cl.getOptionValue("C"));
+            				 hmmoutParser.setCollapseMode(repNo);
+            			}
+            			catch (NumberFormatException nfe) {
+                			System.err.println("ERROR: Specified value for repeat length not a valid number. Exiting.");
+                			System.exit(-1);
+            			}
+            			
             		}
             		if (cl.hasOption("r"))
             			hmmoutParser.setResolveOverlapsMode();
