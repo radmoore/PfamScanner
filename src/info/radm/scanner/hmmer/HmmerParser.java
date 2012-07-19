@@ -284,8 +284,7 @@ public class HmmerParser {
 			int didField = 6;
 			
 			if ( accMode )
-				didField = 5 ;
-			
+				didField = 5;
 			
 			while((line = br.readLine())!= null) {	
 				if (comment.matcher(line).matches())
@@ -302,6 +301,7 @@ public class HmmerParser {
 				// 8, 9 -> hmm coord
 				// 1, 2 -> align coord
 				// 3, 4 -> env coord
+				// 15 -> clanid 
 				String thisId = fields[0];
 				Pattern p = Pattern.compile("\\w+.\\d+");
 				Matcher m = p.matcher(thisId);
@@ -356,6 +356,12 @@ public class HmmerParser {
 						String[] didFields = did.split("\\.");
 						did = didFields[0];
 					}
+				}
+				if ( clanMode ) {
+					p = Pattern.compile("CL\\d+");
+					m = p.matcher(fields[14]);
+					if (m.find())
+						did = fields[14];
 				}
 
 				Domain dom = new Domain(did,
