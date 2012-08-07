@@ -74,7 +74,8 @@ public class PfamScanner {
             .withDescription("Parse previous run of hmmscan/pfamscan (save to file). " +
             		"If set, <in> file must be pfamscan format or hmmscan (version 3)" +
             		" domtblout format, and <out> the name of the xdom that should be written to. " +
-            		"The file format of <in> will be determined automatically.")
+            		"The file format of <in> will be determined automatically. If the file" +
+            		" type cannot be determined, HMMSCAN format will be tried.")
             .withLongOpt("parse-only")
             .create("p");
 	

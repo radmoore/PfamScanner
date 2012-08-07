@@ -84,6 +84,11 @@ public class HmmerParser {
 			br.close();
 			dis.close();
 			fis.close();
+			
+			if (type == -1) {
+				System.err.println("Could not determine file type of "+domtbloutPath +". Trying HMMSCAN but that may not work.");
+				type = HMMSCAN;
+			}
 		}
 		catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -213,7 +218,7 @@ public class HmmerParser {
 						String[] pidFields = currentId.split("\\.");
 						currentId = pidFields[0];
 					}
-					System.out.println("Current id: "+currentId);
+					
 					xdom.setLength(0);
 					xdom.append(">"+currentId+"\t"+fields[5]);
 				}
